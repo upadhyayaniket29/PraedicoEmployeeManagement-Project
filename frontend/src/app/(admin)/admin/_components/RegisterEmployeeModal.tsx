@@ -34,12 +34,31 @@ export default function RegisterEmployeeModal({
     setError("");
 
     try {
+      const token = localStorage.getItem("admin_token");
+
+      // Dummy Login Bypass: Simulate success if using dummy token
+      if (token === "dummy-admin-token") {
+        console.log("Admin Bypass: Simulating employee registration success");
+        // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          setFormData({ name: "", email: "", password: "" });
+          onSuccess();
+          onClose();
+        }, 2000);
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.post(
         "http://localhost:5000/api/admin/employees/register",
         formData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -67,7 +86,7 @@ export default function RegisterEmployeeModal({
       <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
         {/* Top Gradient Bar */}
         <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-        
+
         <div className="p-8">
           <button
             onClick={onClose}
