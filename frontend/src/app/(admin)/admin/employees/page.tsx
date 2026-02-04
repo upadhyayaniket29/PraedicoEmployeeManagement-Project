@@ -194,8 +194,11 @@ export default function EmployeesPage() {
                 {filteredEmployees.map((employee) => (
                   <tr key={employee._id} className="hover:bg-white/5 transition-colors group">
                     <td className="py-6 px-6">
-                      <code className="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-500 font-mono">
-                        {employee._id.slice(-8).toUpperCase()}
+                      <code 
+                        title={employee._id}
+                        className="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-500 font-mono cursor-default hover:text-indigo-400 transition-colors"
+                      >
+                        {employee._id.slice(0, 6).toUpperCase()}...
                       </code>
                     </td>
                     <td className="py-6 px-6">
