@@ -2,12 +2,12 @@
 export type EmployeeType = "Regular" | "Temporary";
 export type TemporaryType = "Intern" | "Contract" | null;
 export type EmployeeCategory = "HR" | "Finance" | "Engineering" | "Marketing" | "Operations" | "Sales";
-export type EmployeeDesignation = 
-  | "Manager" 
-  | "Senior Developer" 
-  | "Junior Developer" 
-  | "HR Executive" 
-  | "Finance Analyst" 
+export type EmployeeDesignation =
+  | "Manager"
+  | "Senior Developer"
+  | "Junior Developer"
+  | "HR Executive"
+  | "Finance Analyst"
   | "Marketing Specialist"
   | "Sales Representative"
   | "Operations Coordinator";
@@ -25,6 +25,7 @@ export interface Employee {
   department: string;
   phone: string;
   address: string;
+  reportingManager?: string;
 }
 
 // Sample Employee Data

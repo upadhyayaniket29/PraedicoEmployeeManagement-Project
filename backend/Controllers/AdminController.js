@@ -2,6 +2,7 @@ import User from "../Models/User.js";
 import bcrypt from "bcryptjs";
 import { sendEmail } from "../Utils/sendEmail.js";
 
+
 /**
  * @desc    Register a new employee by Admin
  * @route   POST /api/admin/employees/register
@@ -9,16 +10,16 @@ import { sendEmail } from "../Utils/sendEmail.js";
  */
 export const registerEmployee = async (req, res) => {
   try {
-    const { 
-      name, 
-      email, 
-      password, 
-      designation, 
-      category, 
-      employeeType, 
-      temporaryType, 
-      phoneNumber, 
-      reportingManager 
+    const {
+      name,
+      email,
+      password,
+      designation,
+      category,
+      employeeType,
+      temporaryType,
+      phoneNumber,
+      reportingManager
     } = req.body;
 
     if (!name || !email || !password) {
@@ -54,7 +55,7 @@ export const registerEmployee = async (req, res) => {
 
     // Send email with credentials
     const message = `Welcome to the team, ${name}!\n\nYour account has been created by the Admin.\n\nEmail: ${email}\nPassword: ${password}\nDesignation: ${designation}\nDepartment: ${category}\nReporting Manager: ${reportingManager}\n\nPlease login and change your password.`;
-    
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
         <h1 style="color: #4f46e5;">Welcome to the team, ${name}!</h1>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AuthCheck from "./_components/AuthCheck";
-import { CURRENT_EMPLOYEE, hasLimitedAccess, getEmployeeTypeDisplay } from "./_components/employeeData";
+import { hasLimitedAccess, getEmployeeTypeDisplay, Employee } from "./_components/employeeData";
 import { EmployeeProfileSummary } from "./shared-components/EmployeeProfileSummary";
 import { EmployeeInfoCard } from "./shared-components/EmployeeInfoCard";
 import {
@@ -22,7 +22,85 @@ import {
 } from "lucide-react";
 
 export default function EmployeeHomePage() {
-    const [employee] = useState(CURRENT_EMPLOYEE);
+    const [employee, setEmployee] = useState<Employee | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const fetchEmployeeData = async () => {
+            try {
+                const token = localStorage.getItem("employeeToken");
+                if (!token) {
+                    window.location.href = "/";
+                    return;
+                }
+
+                const response = await fetch("http://localhost:5000/api/auth/me", {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Map backend data to Employee interface
+                    const employeeData: Employee = {
+                        id: data.data._id || "N/A",
+                        name: data.data.name || "Unknown",
+                        email: data.data.email || "",
+                        avatar: "/avatars/employee-face.png",
+                        category: data.data.category || "Engineering",
+                        designation: data.data.designation || "Employee",
+                        employeeType: data.data.employeeType || "Regular",
+                        temporaryType: data.data.temporaryType || null,
+                        joinDate: data.data.createdAt || new Date().toISOString(),
+                        department: data.data.category || "General",
+                        phone: data.data.phoneNumber || "N/A",
+                        address: "N/A",
+                        reportingManager: data.data.reportingManager || "Not Assigned"
+                    };
+                    setEmployee(employeeData);
+                } else {
+                    setError("Failed to load employee data");
+                }
+            } catch (err) {
+                console.error("Error fetching employee data:", err);
+                setError("Error loading employee data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEmployeeData();
+    }, []);
+
+    if (loading) {
+        return (
+            <AuthCheck>
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="text-slate-400 mt-4">Loading employee data...</p>
+                    </div>
+                </div>
+            </AuthCheck>
+        );
+    }
+
+    if (error || !employee) {
+        return (
+            <AuthCheck>
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                        <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                        <p className="text-red-400">{error || "Failed to load employee data"}</p>
+                    </div>
+                </div>
+            </AuthCheck>
+        );
+    }
+
     const isLimitedAccess = hasLimitedAccess(employee);
 
     return (
@@ -243,7 +321,7 @@ export default function EmployeeHomePage() {
                         />
                         <InfoBox
                             label="Reporting Manager"
-                            value="Sarah Johnson"
+                            value={employee.reportingManager || "Not Assigned"}
                             color="text-emerald-400"
                         />
                     </div>

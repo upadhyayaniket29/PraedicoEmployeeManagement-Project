@@ -18,40 +18,39 @@ export default function EmployeeLoginPage() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("=== Login Form Submitted ===");
-        console.log("Email:", email);
-        console.log("Password:", password);
-
         setError("");
         setIsLoading(true);
 
         try {
-            // Small delay to ensure state updates
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const response = await fetch("http://localhost:5000/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            });
 
-            // Demo credentials (replace with actual API call)
-            if (email === "admin@praedico.com" && password === "admin123") {
-                console.log("✅ Credentials match! Setting localStorage...");
+            const data = await response.json();
 
+            if (data.success && data.data.role === "EMPLOYEE") {
                 // Store authentication token
+                localStorage.setItem("employeeToken", data.data.token);
                 localStorage.setItem("employeeAuth", "true");
                 localStorage.setItem("employeeEmail", email);
+                localStorage.setItem("employeeName", data.data.name);
+                localStorage.setItem("employeeId", data.data.id);
 
-                console.log("✅ localStorage set:", {
-                    employeeAuth: localStorage.getItem("employeeAuth"),
-                    employeeEmail: localStorage.getItem("employeeEmail")
-                });
-
-                // Use window.location for more reliable navigation
-                console.log("🔄 Redirecting to /employee...");
+                // Redirect to employee dashboard
                 window.location.href = "/employee";
+            } else if (data.success && data.data.role === "ADMIN") {
+                setError("This is the employee portal. Please use the admin portal to login.");
+                setIsLoading(false);
             } else {
-                console.log("❌ Invalid credentials");
-                setError("Invalid credentials. Please check your email and password.");
+                setError(data.message || "Invalid credentials. Please check your email and password.");
                 setIsLoading(false);
             }
         } catch (err) {
-            console.error("❌ Login error:", err);
+            console.error("Login error:", err);
             setError("An error occurred. Please try again.");
             setIsLoading(false);
         }
@@ -196,18 +195,7 @@ export default function EmployeeLoginPage() {
                         </button>
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                        <p className="text-xs text-slate-400 mb-2 font-medium">Demo Credentials:</p>
-                        <div className="space-y-1 text-xs">
-                            <p className="text-slate-300">
-                                <span className="text-slate-500">Email:</span> admin@praedico.com
-                            </p>
-                            <p className="text-slate-300">
-                                <span className="text-slate-500">Password:</span> admin123
-                            </p>
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* Footer */}
