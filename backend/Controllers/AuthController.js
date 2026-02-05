@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from "../Models/User.js";
-import { generateToken } from "../utils/generateToken.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { generateToken } from "../Utils/generateToken.js";
+import { sendEmail } from "../Utils/sendEmail.js";
 
 /**
  * @desc    Register new user
