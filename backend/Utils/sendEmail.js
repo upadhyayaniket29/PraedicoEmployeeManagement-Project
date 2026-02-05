@@ -1,43 +1,33 @@
-import nodemailer from "nodemailer";
+import { Resend } from 'resend';
 
 export const sendEmail = async (options) => {
-  console.log(`Attempting to send email via Gmail (IPv4/SSL) for: ${process.env.EMAIL_USER}`);
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false,
-      servername: 'smtp.gmail.com'
-    },
-    family: 4, // Force IPv4 (Crucial for some cloud providers)
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 20000,
-  });
+  console.log(`Attempting to send email via Resend API for: ${options.email}`);
 
   const fromName = process.env.EMAIL_FROM_NAME || "Praedico Admin";
-  const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER;
-
-  const mailOptions = {
-    from: `"${fromName}" <${fromEmail}>`,
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-    html: options.html,
-  };
+  // NOTE: Resend usually requires a verified domain if using custom from address.
+  // For the 'onboarding' key, it might require a specific sender.
+  const fromEmail = "onboarding@resend.dev"; // Default Resend test sender
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`Email sent successfully: ${info.messageId}`);
-    return info;
+    const { data, error } = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: [options.email],
+      subject: options.subject,
+      text: options.message,
+      html: options.html,
+    });
+
+    if (error) {
+      console.error(`Resend API Error: ${error.message}`);
+      throw new Error(error.message);
+    }
+
+    console.log(`Email sent successfully via Resend: ${data.id}`);
+    return data;
   } catch (error) {
-    console.error(`Detailed Email Error: ${error.message}`);
+    console.error(`Detailed Email Error (Resend): ${error.message}`);
     throw error;
   }
 };
