@@ -1,17 +1,24 @@
 import nodemailer from "nodemailer";
 
 export const sendEmail = async (options) => {
-  console.log(`Attempting to send email via Gmail Service for: ${process.env.EMAIL_USER}`);
+  console.log(`Attempting to send email via Gmail (IPv4/SSL) for: ${process.env.EMAIL_USER}`);
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
+    tls: {
+      rejectUnauthorized: false,
+      servername: 'smtp.gmail.com'
+    },
+    family: 4, // Force IPv4 (Crucial for some cloud providers)
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 20000,
   });
 
   const fromName = process.env.EMAIL_FROM_NAME || "Praedico Admin";
