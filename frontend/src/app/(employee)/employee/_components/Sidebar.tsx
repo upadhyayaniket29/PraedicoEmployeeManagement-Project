@@ -21,10 +21,13 @@ import {
   FileText,
   HelpCircle,
   User,
+  UserCheck,
   CreditCard,
 } from "lucide-react";
 import axios from "axios";
 import { cn } from "@/lib/utils";
+import ProfileModal from "./ProfileModal";
+import { Employee } from "./employeeData";
 
 // ==========================================
 // TYPES
@@ -63,62 +66,26 @@ interface SidebarProps {
 
 const MENU_GROUPS: MenuGroup[] = [
   {
-    title: "Overview",
+    title: "Main",
     items: [
-      { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/admin/analytics", label: "Analytics", icon: BarChart3, badge: "New", variant: "new" },
-      {
-        label: "eCommerce",
-        icon: ShoppingBag,
-        subItems: [
-          { href: "/admin/ecommerce/products", label: "Products" },
-          { href: "/admin/ecommerce/orders", label: "Orders" },
-          { href: "/admin/ecommerce/customers", label: "Customers" },
-        ],
-      },
+      { href: "/employee", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/employee/attendance", label: "Attendance", icon: UserCheck },
+      { href: "/employee/leave", label: "Leave Requests", icon: Layers },
     ],
   },
   {
-    title: "Workspace",
+    title: "Communication",
     items: [
-      {
-        label: "User Management",
-        icon: Users,
-        // onClick handled via prop injection in component
-      },
-      { href: "/admin/reports", label: "System Reports", icon: FileText },
-      { href: "/admin/inbox", label: "Inbox", icon: Mail, badge: 3, variant: "notification" },
-    ],
-  },
-  {
-    title: "Interface",
-    items: [
-      {
-        label: "Components",
-        icon: Layers,
-        subItems: [
-          { href: "/admin/ui/alerts", label: "Alerts" },
-          { href: "/admin/ui/buttons", label: "Buttons" },
-          { href: "/admin/ui/cards", label: "Cards" },
-        ],
-      },
-      {
-        label: "Design System",
-        icon: Palette,
-        subItems: [
-          { href: "/admin/ui/icons", label: "Icons" },
-          { href: "/admin/ui/typography", label: "Typography" },
-        ],
-      },
+      { href: "/employee/inbox", label: "Inbox", icon: Mail, badge: 3, variant: "notification" },
+      { href: "/employee/notices", label: "Notice Board", icon: FileText },
     ],
   },
   {
     title: "Settings",
     items: [
-      { href: "/admin/profile", label: "Profile", icon: User },
-      { href: "/admin/billing", label: "Billing", icon: CreditCard },
-      { href: "/admin/settings", label: "Settings", icon: Settings },
-      { href: "/admin/help", label: "Help Center", icon: HelpCircle },
+      { label: "Profile", icon: User, onClick: () => { /* This will be handled by state in Sidebar */ } },
+      { href: "/employee/settings", label: "Settings", icon: Settings },
+      { href: "/employee/help", label: "Help Center", icon: HelpCircle },
     ],
   },
 ];
@@ -133,29 +100,54 @@ export function Sidebar({
   onToggle,
   onUserManagementClick,
 }: SidebarProps) {
+  const [isClient, setIsClient] = useState(false);
   const [userData, setUserData] = useState({
-    name: "Arjun Singh",
-    email: "admin@praedico.com",
-    avatar: "/avatars/admin-face.png"
+    name: "Employee",
+    email: "...",
+    avatar: "/avatars/employee-face.png"
   });
+  const [fullEmployeeData, setFullEmployeeData] = useState<Employee | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     fetchUserProfile();
   }, []);
 
   const fetchUserProfile = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5001/api/users/me", { withCredentials: true });
-      if (data.success && data.user) {
+      const token = localStorage.getItem("employeeToken");
+      const { data } = await axios.get("http://localhost:5000/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (data.success && data.data) {
         setUserData({
-          name: data.user.name,
-          email: data.user.email,
-          avatar: data.user.avatar || "/avatars/admin-face.png",
+          name: data.data.name,
+          email: data.data.email,
+          avatar: data.data.avatar || "/avatars/employee-face.png",
         });
+
+        const mappedData: Employee = {
+          id: data.data.employeeId || data.data._id || "N/A",
+          name: data.data.name || "Unknown",
+          email: data.data.email || "",
+          avatar: "/avatars/employee-face.png",
+          category: data.data.category || "Engineering",
+          designation: data.data.designation || "Employee",
+          employeeType: data.data.employeeType || "Regular",
+          temporaryType: data.data.temporaryType || null,
+          joinDate: data.data.createdAt || new Date().toISOString(),
+          department: data.data.category || "General",
+          phone: data.data.phoneNumber || "N/A",
+          address: "N/A",
+          reportingManager: data.data.reportingManager || "Not Assigned"
+        };
+        setFullEmployeeData(mappedData);
       }
     } catch (e) {
-      // Keep default data if API fails
-      console.log("Using default user data");
+      setUserData({ name: "Employee", email: "employee@praedico.com", avatar: "/avatars/employee-face.png" });
     }
   };
 
@@ -213,22 +205,25 @@ export function Sidebar({
               isOpen={isOpen}
               onUserManagementClick={onUserManagementClick}
               onToggleSidebar={handleToggle}
+              onProfileClick={() => setIsProfileModalOpen(true)}
             />
           ))}
 
-          {/* Promo Card - Clean Transition */}
-          <div
-            className={cn(
-              "px-5 transition-all duration-500 ease-in-out transform",
-              isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none absolute bottom-0"
-            )}
-          >
-            <PromoCard />
-          </div>
+
         </div>
 
         {/* 3. User Profile Footer */}
-        <UserProfileFooter isOpen={isOpen} user={userData} />
+        <UserProfileFooter
+          isOpen={isOpen}
+          user={userData}
+          onProfileClick={() => setIsProfileModalOpen(true)}
+        />
+
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          employee={fullEmployeeData}
+        />
       </aside>
     </>
   );
@@ -259,7 +254,7 @@ const SidebarHeader = memo(({ isOpen, onToggle }: { isOpen: boolean; onToggle: (
             Praedico
           </span>
           <span className="text-[10px] font-bold text-indigo-400 tracking-[0.25em] mt-1 whitespace-nowrap uppercase">
-            Admin Portal
+            Employee Portal
           </span>
         </div>
       </div>
@@ -282,12 +277,14 @@ const NavGroup = memo(({
   group,
   isOpen,
   onUserManagementClick,
-  onToggleSidebar
+  onToggleSidebar,
+  onProfileClick
 }: {
   group: MenuGroup;
   isOpen: boolean;
   onUserManagementClick?: () => void;
   onToggleSidebar: () => void;
+  onProfileClick: () => void;
 }) => {
   return (
     <div className="px-4">
@@ -306,6 +303,7 @@ const NavGroup = memo(({
             isOpen={isOpen}
             onUserManagementClick={onUserManagementClick}
             onToggleSidebar={onToggleSidebar}
+            onProfileClick={onProfileClick}
           />
         ))}
       </div>
@@ -318,12 +316,14 @@ const NavItem = memo(({
   item,
   isOpen,
   onUserManagementClick,
-  onToggleSidebar
+  onToggleSidebar,
+  onProfileClick
 }: {
   item: MenuItem;
   isOpen: boolean;
   onUserManagementClick?: () => void;
   onToggleSidebar: () => void;
+  onProfileClick: () => void;
 }) => {
   const pathname = usePathname();
   const Icon = item.icon;
@@ -352,6 +352,13 @@ const NavItem = memo(({
   };
 
   const Wrapper = ({ children, className }: any) => {
+    if (item.label === "Profile") {
+      return (
+        <button onClick={(e) => { e.preventDefault(); onProfileClick(); }} className={className} type="button">
+          {children}
+        </button>
+      );
+    }
     if (item.subItems || isUserMgmt) return <button onClick={handleClick} className={className} type="button">{children}</button>;
     return <Link href={item.href!} className={className}>{children}</Link>;
   };
@@ -435,46 +442,28 @@ const NavItem = memo(({
 });
 NavItem.displayName = "NavItem";
 
-const PromoCard = memo(() => {
-  return (
-    <div className="relative rounded-2xl bg-gradient-to-br from-violet-900/50 to-fuchsia-900/50 p-5 shadow-lg overflow-hidden group cursor-pointer border border-white/10 hover:border-white/20 transition-colors">
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light" />
 
-      {/* Moving Shine Effect */}
-      <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 animate-shine-slide" />
 
-      <div className="relative z-10">
-        <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/10 shadow-inner">
-          <Zap className="text-white h-5 w-5 fill-white" />
-        </div>
-
-        <h4 className="text-white font-bold text-base mb-1">Upgrade to Pro</h4>
-        <p className="text-white/60 text-xs leading-relaxed mb-4">
-          Unlock AI reports & more.
-        </p>
-
-        <button className="w-full py-2.5 bg-white text-black text-xs font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
-          View Pricing <ChevronRight size={12} />
-        </button>
-      </div>
-    </div>
-  );
-});
-PromoCard.displayName = "PromoCard";
-
-const UserProfileFooter = memo(({ isOpen, user }: { isOpen: boolean; user: any }) => {
+const UserProfileFooter = memo(({ isOpen, user, onProfileClick }: { isOpen: boolean; user: any; onProfileClick: () => void }) => {
   const [imgError, setImgError] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:4000/api/users/logout", {}, { withCredentials: true });
-      window.location.href = "/login";
+      localStorage.removeItem("employeeToken");
+      localStorage.removeItem("employeeAuth");
+      localStorage.removeItem("employeeEmail");
+      localStorage.removeItem("employeeName");
+      localStorage.removeItem("employeeId");
+      window.location.href = "/";
     } catch (e) { console.error(e); }
   };
 
   return (
     <div className="flex-shrink-0 p-4 border-t border-white/5 bg-[#08090f] relative group">
-      <div className={cn("flex items-center gap-3 p-2 rounded-2xl transition-all duration-300", isOpen ? "bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10" : "justify-center")}>
+      <div
+        onClick={onProfileClick}
+        className={cn("flex items-center gap-3 p-2 rounded-2xl transition-all duration-300 cursor-pointer", isOpen ? "bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10" : "justify-center")}
+      >
 
         {/* AVATAR CONTAINER */}
         <div className="relative flex-shrink-0 h-10 w-10">
@@ -510,7 +499,7 @@ const UserProfileFooter = memo(({ isOpen, user }: { isOpen: boolean; user: any }
           <p className="text-sm font-bold text-white truncate leading-tight group-hover:text-pink-300 transition-colors">
             {user.name}
           </p>
-          <p className="text-[10px] text-slate-500 truncate font-medium uppercase tracking-wide mt-0.5">Administrator</p>
+          <p className="text-[10px] text-slate-500 truncate font-medium uppercase tracking-wide mt-0.5">Employee</p>
         </div>
 
         {/* Logout */}

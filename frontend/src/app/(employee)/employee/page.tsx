@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AuthCheck from "./_components/AuthCheck";
 import { hasLimitedAccess, getEmployeeTypeDisplay, Employee } from "./_components/employeeData";
+import ChangePasswordModal from "./_components/ChangePasswordModal";
 import { EmployeeProfileSummary } from "./shared-components/EmployeeProfileSummary";
 import { EmployeeInfoCard } from "./shared-components/EmployeeInfoCard";
 import {
@@ -25,6 +26,8 @@ export default function EmployeeHomePage() {
     const [employee, setEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
 
     useEffect(() => {
         const fetchEmployeeData = async () => {
@@ -46,7 +49,7 @@ export default function EmployeeHomePage() {
                 if (data.success) {
                     // Map backend data to Employee interface
                     const employeeData: Employee = {
-                        id: data.data._id || "N/A",
+                        id: data.data.employeeId || data.data._id || "N/A",
                         name: data.data.name || "Unknown",
                         email: data.data.email || "",
                         avatar: "/avatars/employee-face.png",
@@ -132,20 +135,7 @@ export default function EmployeeHomePage() {
                     </div>
                 </div>
 
-                {/* Limited Access Warning for Temporary Employees */}
-                {isLimitedAccess && (
-                    <div className="rounded-[2rem] bg-amber-500/10 border border-amber-500/20 p-6 flex items-start gap-4">
-                        <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400">
-                            <AlertCircle size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-amber-400 mb-1">Limited Access Account</h3>
-                            <p className="text-amber-200/80 text-sm">
-                                As a {employee.temporaryType?.toLowerCase()} employee, you have restricted access to certain features and actions.
-                            </p>
-                        </div>
-                    </div>
-                )}
+
 
                 {/* Quick Stats - Dashboard Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -330,19 +320,22 @@ export default function EmployeeHomePage() {
                 {/* Change Password Button */}
                 <div className="flex justify-center">
                     <button
-                        disabled={isLimitedAccess}
-                        className={`group relative overflow-hidden px-8 py-6 rounded-2xl font-bold transition-all duration-300 ${isLimitedAccess
-                            ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
-                            : "bg-slate-800 text-white border border-slate-700 hover:bg-slate-700 hover:border-slate-600 hover:scale-[1.02] shadow-lg hover:shadow-xl"
-                            }`}
+                        onClick={() => setIsPasswordModalOpen(true)}
+                        className="group relative overflow-hidden px-8 py-6 rounded-2xl font-bold transition-all duration-300 bg-slate-800 text-white border border-slate-700 hover:bg-slate-700 hover:border-slate-600 hover:scale-[1.02] shadow-lg hover:shadow-xl"
                     >
                         <span className="relative z-10 flex items-center justify-center gap-3 text-lg">
                             <Lock className="h-6 w-6" />
                             Change Password
-                            {isLimitedAccess && <span className="text-xs font-normal">(Not Available)</span>}
                         </span>
                     </button>
                 </div>
+
+                {/* Change Password Modal */}
+                <ChangePasswordModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                />
+
 
 
                 {/* Footer Note */}

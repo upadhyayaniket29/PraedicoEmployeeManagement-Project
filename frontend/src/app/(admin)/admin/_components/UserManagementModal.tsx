@@ -121,7 +121,11 @@ export default function UserManagementModal({
 
       const response = await axios.get(
         `http://localhost:5000/api/users/all?${params}`,
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          }
+        }
       );
 
       if (response.data.success) {
@@ -141,7 +145,11 @@ export default function UserManagementModal({
     try {
       const response = await axios.get(
         "http://localhost:5000/api/users/stats",
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          }
+        }
       );
 
       if (response.data.success) {
@@ -157,7 +165,11 @@ export default function UserManagementModal({
     try {
       const response = await axios.delete(
         `http://localhost:5000/api/users/${userId}`,
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          }
+        }
       );
 
       if (response.data.success) {
@@ -173,41 +185,41 @@ export default function UserManagementModal({
   };
 
   // Toggle User Active Status
-// Toggle User Active Status
-const handleToggleActive = async (userId: string) => {
-  console.log("🔄 Toggling user status for ID:", userId); // Debug log
-  
-  try {
-    const response = await axios.patch(
-      `http://localhost:5000/api/users/${userId}/toggle-active`,
-      {}, // Empty body
-      { 
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json'
+  // Toggle User Active Status
+  const handleToggleActive = async (userId: string) => {
+    console.log("🔄 Toggling user status for ID:", userId); // Debug log
+
+    try {
+      const response = await axios.patch(
+        `http://localhost:5000/api/users/${userId}/toggle-active`,
+        {}, // Empty body
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          }
         }
+      );
+
+      console.log("✅ Toggle response:", response.data); // Debug log
+
+      if (response.data.success) {
+        alert(response.data.message || "User status updated successfully!");
+        fetchUsers();
+        fetchStats();
+        setActionMenuOpen(null);
       }
-    );
+    } catch (err: any) {
+      console.error("❌ Toggle error:", err); // Debug log
+      console.error("❌ Error response:", err.response); // Debug log
 
-    console.log("✅ Toggle response:", response.data); // Debug log
+      const errorMessage = err.response?.data?.message ||
+        err.message ||
+        "Failed to toggle user status";
 
-    if (response.data.success) {
-      alert(response.data.message || "User status updated successfully!");
-      fetchUsers();
-      fetchStats();
-      setActionMenuOpen(null);
+      alert(errorMessage);
     }
-  } catch (err: any) {
-    console.error("❌ Toggle error:", err); // Debug log
-    console.error("❌ Error response:", err.response); // Debug log
-    
-    const errorMessage = err.response?.data?.message || 
-                        err.message || 
-                        "Failed to toggle user status";
-    
-    alert(errorMessage);
-  }
-};
+  };
 
 
   // Export to CSV
@@ -221,8 +233,8 @@ const handleToggleActive = async (userId: string) => {
         u.isActive && u.isVerified
           ? "Active"
           : !u.isActive
-          ? "Blocked"
-          : "Inactive",
+            ? "Blocked"
+            : "Inactive",
         new Date(u.createdAt).toLocaleDateString(),
       ]),
     ]
@@ -259,7 +271,8 @@ const handleToggleActive = async (userId: string) => {
   // ============================================
 
   const getStatusBadge = (user: User) => {
-    if (user.isActive && user.isVerified) {
+    if (user.isActive && user.isVerified !== false) {
+
       return (
         <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
           Active
@@ -291,18 +304,18 @@ const handleToggleActive = async (userId: string) => {
 
   const getTimeAgo = (dateString?: string) => {
     if (!dateString) return "Never";
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins} min ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-    
+
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
   };

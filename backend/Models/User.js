@@ -14,7 +14,11 @@ const userSchema = new mongoose.Schema(
     reportingManager: { type: String },
     employeeId: { type: String, unique: true, sparse: true },
     isActive: { type: Boolean, default: true },
+    isVerified: { type: Boolean, default: true },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
+
   { timestamps: true },
 );
 

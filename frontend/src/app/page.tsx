@@ -56,18 +56,34 @@ export default function EmployeeLoginPage() {
         }
     };
 
-    const handleForgotPassword = (e: React.FormEvent) => {
+    const handleForgotPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate password reset
-        setTimeout(() => {
-            setResetSuccess(true);
-            setTimeout(() => {
+        setError("");
+
+        try {
+            const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email: resetEmail }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setResetSuccess(true);
+            } else {
+                setError(data.message || "Failed to send reset link.");
                 setShowForgotPassword(false);
-                setResetSuccess(false);
-                setResetEmail("");
-            }, 2000);
-        }, 1000);
+            }
+        } catch (err) {
+            console.error("Forgot password error:", err);
+            setError("An error occurred. Please try again.");
+            setShowForgotPassword(false);
+        }
     };
+
 
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar } from "../../(admin)/admin/_components/Sidebar";
-import DashboardNavbar from "../../(admin)/admin/_components/DashboardNavbar";
+import { Sidebar } from "./_components/Sidebar";
+import DashboardNavbar from "./_components/DashboardNavbar";
 
 export default function EmployeeLayout({
     children,
