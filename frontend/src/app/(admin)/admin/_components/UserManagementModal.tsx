@@ -144,7 +144,7 @@ export default function UserManagementModal({
   const fetchStats = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/users/stats",
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/users/stats`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("admin_token")}`,

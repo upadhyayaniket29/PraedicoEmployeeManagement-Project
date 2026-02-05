@@ -170,7 +170,7 @@ export default function EmployeesPage() {
     setError("");
     try {
       const token = localStorage.getItem("admin_token");
-      const response = await axios.get("http://localhost:5000/api/admin/employees", {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/employees`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -395,8 +395,8 @@ export default function EmployeesPage() {
                     </td>
                     <td className="py-6 px-6">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${employee.isActive
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                         }`}>
                         <div className={`h-1.5 w-1.5 rounded-full ${employee.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
                         {employee.isActive ? 'Active' : 'Deactivated'}
@@ -444,8 +444,8 @@ export default function EmployeesPage() {
                               <button
                                 onClick={() => handleToggleStatus(employee._id, employee.isActive)}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${employee.isActive
-                                    ? 'text-rose-400 hover:bg-rose-500/10'
-                                    : 'text-emerald-400 hover:bg-emerald-500/10'
+                                  ? 'text-rose-400 hover:bg-rose-500/10'
+                                  : 'text-emerald-400 hover:bg-emerald-500/10'
                                   }`}
                               >
                                 {employee.isActive ? (

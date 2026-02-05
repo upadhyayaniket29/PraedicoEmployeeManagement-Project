@@ -41,7 +41,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         try {
             const token = localStorage.getItem("employeeToken");
             const response = await axios.post(
-                "http://localhost:5000/api/auth/change-password",
+                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/change-password`,
                 {
                     currentPassword: formData.currentPassword,
                     newPassword: formData.newPassword,

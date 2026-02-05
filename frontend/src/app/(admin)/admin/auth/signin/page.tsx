@@ -23,7 +23,7 @@ export default function AdminSignIn() {
 
     try {
       // Connect to backend (adjusting port if necessary, backend was running on 5000 in index.js)
-      const response = await axios.post("http://localhost:5000/api/auth/login", {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/login`, {
         email,
         password,
       });

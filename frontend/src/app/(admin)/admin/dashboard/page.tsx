@@ -32,11 +32,12 @@ export default function AdminDashboard() {
           return;
         }
 
-        const { data } = await axios.get("http://localhost:5000/api/auth/me", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
+        const data = await response.json();
 
         if (data.success && data.user) {
           setAdminName(data.user.name || "Admin");

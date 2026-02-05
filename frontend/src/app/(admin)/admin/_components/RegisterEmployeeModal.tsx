@@ -43,7 +43,7 @@ export default function RegisterEmployeeModal({
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/admin/employees/register",
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/employees/register`,
         formData,
         {
           headers: {
@@ -57,9 +57,9 @@ export default function RegisterEmployeeModal({
         setSuccess(true);
         setTimeout(() => {
           setSuccess(false);
-          setFormData({ 
-            name: "", 
-            email: "", 
+          setFormData({
+            name: "",
+            email: "",
             password: "",
             designation: "",
             category: "",
@@ -86,7 +86,7 @@ export default function RegisterEmployeeModal({
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
         {/* Top Gradient Bar */}
         <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-        
+
         <div className="p-8">
           <button
             onClick={onClose}
@@ -209,8 +209,8 @@ export default function RegisterEmployeeModal({
                     >
                       <option value="" disabled className="bg-slate-900">Select Designation</option>
                       {[
-                        "CEO", "CTO", "COO", "Director", "General Manager", 
-                        "Project Manager", "Product Manager", "Team Lead", 
+                        "CEO", "CTO", "COO", "Director", "General Manager",
+                        "Project Manager", "Product Manager", "Team Lead",
                         "Junior Developer", "Senior Developer", "Engineering Manager"
                       ].map(role => (
                         <option key={role} value={role} className="bg-slate-900">{role}</option>
@@ -233,8 +233,8 @@ export default function RegisterEmployeeModal({
                     >
                       <option value="" disabled className="bg-slate-900">Select Category</option>
                       {[
-                        "Engineering / IT", "Human Resources (HR)", "Finance & Accounts", 
-                        "Sales", "Marketing", "Operations", "Customer Support", 
+                        "Engineering / IT", "Human Resources (HR)", "Finance & Accounts",
+                        "Sales", "Marketing", "Operations", "Customer Support",
                         "Administration", "Legal", "Product", "Research & Development (R&D)"
                       ].map(cat => (
                         <option key={cat} value={cat} className="bg-slate-900">{cat}</option>
@@ -301,23 +301,23 @@ export default function RegisterEmployeeModal({
               <div className="pt-4 text-right">
                 <button
                   type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Registering...</span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-5 w-5" />
-                    <span>Register Employee</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+                  disabled={loading}
+                  className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Registering...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-5 w-5" />
+                      <span>Register Employee</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           )}
         </div>
       </div>

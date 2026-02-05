@@ -41,7 +41,7 @@ export default function DashboardNavbar() {
           return;
         }
 
-        const { data } = await axios.get("http://localhost:5000/api/auth/me", {
+        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
