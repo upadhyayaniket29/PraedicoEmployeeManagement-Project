@@ -97,10 +97,6 @@ export default function AdminSignIn() {
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-slate-300 ml-1 text-sm font-semibold">Password</Label>
-                  <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 font-bold transition-colors">Recovery Mode?</a>
-                </div>
                 <div className="relative group/input">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-indigo-400 transition-colors">
                     <Lock className="h-5 w-5" />

@@ -20,10 +20,12 @@ import {
   Check,
   UserX,
   Power,
-  Trash2
+  Trash2,
+  Edit
 } from "lucide-react";
 import axios from "axios";
 import RegisterEmployeeModal from "../_components/RegisterEmployeeModal";
+import UpdateEmployeeModal from "../_components/UpdateEmployeeModal";
 
 // --- Custom Premium Select Component ---
 function CustomSelect({
@@ -121,6 +123,8 @@ export default function EmployeesPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
@@ -143,6 +147,12 @@ export default function EmployeesPage() {
     } catch (err: any) {
       alert(err.response?.data?.message || "Failed to update status");
     }
+  };
+
+  const handleEdit = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsUpdateModalOpen(true);
+    setActiveMenu(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -442,6 +452,14 @@ export default function EmployeesPage() {
                             </div>
                             <div className="p-2 space-y-1">
                               <button
+                                onClick={() => handleEdit(employee)}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-indigo-400 hover:bg-indigo-500/10 transition-all"
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit Employee
+                              </button>
+
+                              <button
                                 onClick={() => handleToggleStatus(employee._id, employee.isActive)}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${employee.isActive
                                   ? 'text-rose-400 hover:bg-rose-500/10'
@@ -503,6 +521,18 @@ export default function EmployeesPage() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchEmployees}
       />
+
+      <UpdateEmployeeModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => {
+          setIsUpdateModalOpen(false);
+          setSelectedEmployee(null);
+        }}
+        onSuccess={fetchEmployees}
+        employee={selectedEmployee}
+      />
+
+
     </div>
   );
 }

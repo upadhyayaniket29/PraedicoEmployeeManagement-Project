@@ -1,12 +1,26 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { X, UserPlus, Mail, Lock, User, Loader2, CheckCircle2, AlertCircle, Briefcase, Phone, Layers, UserCheck } from "lucide-react";
+import { X, UserCog, Mail, User, Loader2, CheckCircle2, AlertCircle, Briefcase, Phone, Layers, UserCheck } from "lucide-react";
 import axios from "axios";
 
-interface RegisterEmployeeModalProps {
+interface UpdateEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  employee: Employee | null;
+}
+
+interface Employee {
+  _id: string;
+  employeeId?: string;
+  name: string;
+  email: string;
+  designation?: string;
+  category?: string;
+  employeeType?: string;
+  temporaryType?: string;
+  phoneNumber?: string;
+  reportingManager?: string;
 }
 
 interface Manager {
@@ -16,11 +30,12 @@ interface Manager {
   designation: string;
 }
 
-export default function RegisterEmployeeModal({
+export default function UpdateEmployeeModal({
   isOpen,
   onClose,
   onSuccess,
-}: RegisterEmployeeModalProps) {
+  employee,
+}: UpdateEmployeeModalProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,17 +49,25 @@ export default function RegisterEmployeeModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [registeredId, setRegisteredId] = useState("");
-  const [generatedPassword, setGeneratedPassword] = useState("");
   const [managers, setManagers] = useState<Manager[]>([]);
   const [loadingManagers, setLoadingManagers] = useState(false);
 
-  // Fetch managers when modal opens
+  // Populate form when employee data changes
   useEffect(() => {
-    if (isOpen) {
+    if (employee && isOpen) {
+      setFormData({
+        name: employee.name || "",
+        email: employee.email || "",
+        designation: employee.designation || "",
+        category: employee.category || "",
+        employeeType: employee.employeeType || "Regular",
+        temporaryType: employee.temporaryType || "",
+        phoneNumber: employee.phoneNumber || "",
+        reportingManager: employee.reportingManager || "",
+      });
       fetchManagers();
     }
-  }, [isOpen]);
+  }, [employee, isOpen]);
 
   const fetchManagers = async () => {
     setLoadingManagers(true);
@@ -75,27 +98,15 @@ export default function RegisterEmployeeModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!employee) return;
+    
     setLoading(true);
     setError("");
 
-    // Auto-generate password
-    // first 4 chars of name + @ + first 4 digits of phoneNumber
-    // Ensure name and phone have enough characters or handle gracefully
-    const namePart = formData.name.substring(0, 4).toLowerCase();
-    const phonePart = formData.phoneNumber.replace(/\D/g, '').substring(0, 4); // Remove non-digits
-    
-    if (namePart.length < 1) {
-        setError("Name is too short to generate password.");
-        setLoading(false);
-        return;
-    }
-    
-    const password = `${namePart}@${phonePart || "1234"}`; // Fallback if no phone digits
-
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/employees/register`,
-        { ...formData, password },
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/employees/${employee._id}`,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
@@ -104,41 +115,21 @@ export default function RegisterEmployeeModal({
       );
 
       if (response.data.success) {
-        setRegisteredId(response.data.data.employeeId);
-        setGeneratedPassword(password);
         setSuccess(true);
-        // Clear form but keep success message for a bit longer or wait for user to close
-        // The user wants it visible on success page, so likely they want to copy it.
-        // I will remove the auto-close timeout or make it longer/manual close.
-        // User didn't specify auto-close removal but "visible on success page" implies read-ability.
-        // I'll keep the timeout but make it longer or remove it? Currently it is 2000ms (2s). 
-        // 2s is too short to read a password. I will remove the timeout for closing.
+        setTimeout(() => {
+          setSuccess(false);
+          onSuccess();
+          onClose();
+        }, 2000);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to register employee");
+      setError(err.response?.data?.message || "Failed to update employee");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    setSuccess(false);
-    setFormData({
-      name: "",
-      email: "",
-      designation: "",
-      category: "",
-      employeeType: "Regular",
-      temporaryType: "",
-      phoneNumber: "",
-      reportingManager: "",
-    });
-    setGeneratedPassword("");
-    onSuccess();
-    onClose();
-  };
-
-  if (!isOpen) return null;
+  if (!isOpen || !employee) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -156,11 +147,14 @@ export default function RegisterEmployeeModal({
 
           <div className="flex flex-col items-center text-center mb-8">
             <div className="h-16 w-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-4 border border-indigo-500/20">
-              <UserPlus className="h-8 w-8 text-indigo-400" />
+              <UserCog className="h-8 w-8 text-indigo-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Register Employee</h2>
+            <h2 className="text-2xl font-bold text-white">Update Employee</h2>
             <p className="text-slate-400 text-sm mt-1">
-              Add a new employee and send credentials via email
+              Edit employee information for {employee.name}
+            </p>
+            <p className="text-indigo-400 text-xs mt-1 font-bold">
+              ID: {employee.employeeId || employee._id}
             </p>
           </div>
 
@@ -171,26 +165,8 @@ export default function RegisterEmployeeModal({
               </div>
               <h3 className="text-xl font-bold text-white">Success!</h3>
               <p className="text-slate-400 text-center mt-2">
-                Employee registered successfully with ID: <span className="text-indigo-400 font-bold">{registeredId}</span>
+                Employee information updated successfully
               </p>
-              
-              <div className="mt-6 bg-slate-800/50 p-4 rounded-xl border border-slate-700 w-full max-w-xs text-center">
-                <p className="text-slate-400 text-xs uppercase tracking-widest font-bold mb-1">Generated Password</p>
-                <code className="text-xl text-white font-mono bg-black/30 px-3 py-1 rounded-lg block select-all">
-                  {generatedPassword}
-                </code>
-              </div>
-
-              <p className="text-slate-400 text-center text-xs mt-4">
-                Credentials have been sent to their email.
-              </p>
-              
-              <button
-                onClick={handleClose}
-                className="mt-8 px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
-              >
-                Done
-              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -375,12 +351,12 @@ export default function RegisterEmployeeModal({
                   {loading ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Registering...</span>
+                      <span>Updating...</span>
                     </>
                   ) : (
                     <>
-                      <UserPlus className="h-5 w-5" />
-                      <span>Register Employee</span>
+                      <UserCog className="h-5 w-5" />
+                      <span>Update Employee</span>
                     </>
                   )}
                 </button>

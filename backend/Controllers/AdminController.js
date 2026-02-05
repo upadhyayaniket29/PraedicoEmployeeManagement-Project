@@ -226,6 +226,118 @@ export const toggleEmployeeStatus = async (req, res) => {
 };
 
 /**
+ * @desc    Update employee information
+ * @route   PUT /api/admin/employees/:id
+ * @access  Private (Admin only)
+ */
+export const updateEmployee = async (req, res) => {
+  try {
+    const { 
+      name, 
+      email, 
+      designation, 
+      category, 
+      employeeType, 
+      temporaryType, 
+      phoneNumber, 
+      reportingManager 
+    } = req.body;
+
+    const employee = await User.findById(req.params.id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (email && email !== employee.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already in use",
+        });
+      }
+    }
+
+    // Update fields
+    if (name) employee.name = name;
+    if (email) employee.email = email;
+    if (designation) employee.designation = designation;
+    if (category) employee.category = category;
+    if (employeeType) employee.employeeType = employeeType;
+    if (temporaryType !== undefined) employee.temporaryType = temporaryType;
+    if (phoneNumber !== undefined) employee.phoneNumber = phoneNumber;
+    if (reportingManager !== undefined) employee.reportingManager = reportingManager;
+
+    await employee.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Employee updated successfully",
+      data: {
+        id: employee._id,
+        employeeId: employee.employeeId,
+        name: employee.name,
+        email: employee.email,
+        designation: employee.designation,
+        category: employee.category,
+        employeeType: employee.employeeType,
+        temporaryType: employee.temporaryType,
+        phoneNumber: employee.phoneNumber,
+        reportingManager: employee.reportingManager,
+      },
+    });
+  } catch (error) {
+    console.error("Update Employee Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+/**
+ * @desc    Get all managers (employees with manager-type designations)
+ * @route   GET /api/admin/managers
+ * @access  Private (Admin only)
+ */
+export const getAllManagers = async (req, res) => {
+  try {
+    const managerDesignations = [
+      "CEO", 
+      "CTO", 
+      "COO", 
+      "Director", 
+      "General Manager",
+      "Project Manager", 
+      "Product Manager", 
+      "Team Lead",
+      "Engineering Manager"
+    ];
+
+    const managers = await User.find({ 
+      role: "EMPLOYEE",
+      designation: { $in: managerDesignations }
+    }).select("name employeeId designation");
+
+    res.status(200).json({
+      success: true,
+      data: managers,
+    });
+  } catch (error) {
+    console.error("Get Managers Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+/**
  * @desc    Delete a user/employee
  * @route   DELETE /api/admin/users/:id
  * @access  Private (Admin only)

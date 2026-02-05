@@ -39,8 +39,8 @@ export default function AdminDashboard() {
         });
         const data = await response.json();
 
-        if (data.success && data.user) {
-          setAdminName(data.user.name || "Admin");
+        if (data.success && data.data) {
+          setAdminName(data.data.name || "Admin");
         }
       } catch (e) {
         console.error("Failed to fetch admin profile", e);

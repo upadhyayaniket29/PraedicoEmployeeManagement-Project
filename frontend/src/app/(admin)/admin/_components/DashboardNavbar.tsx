@@ -43,9 +43,9 @@ export default function DashboardNavbar() {
           }
         });
 
-        if (data.success && data.user) {
-          setAdminName(data.user.name || "Admin");
-          setAdminEmail(data.user.email || "admin@praedico.com");
+        if (data.success && data.data) {
+          setAdminName(data.data.name || "Admin");
+          setAdminEmail(data.data.email || "admin@praedico.com");
         }
       } catch (e) {
         setAdminEmail("Guest Mode");
