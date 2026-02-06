@@ -23,6 +23,7 @@ import {
   User,
   UserCheck,
   CreditCard,
+  CheckSquare,
 } from "lucide-react";
 import axios from "axios";
 import { cn } from "@/lib/utils";
@@ -83,6 +84,7 @@ const MENU_GROUPS: MenuGroup[] = [
     title: "Workspace",
     items: [
       { href: "/admin/employees", label: "Employees", icon: Users },
+      { href: "/admin/tasks", label: "Task Management", icon: CheckSquare },
       { label: "User Management", icon: UserCheck },
       { href: "/admin/reports", label: "System Reports", icon: FileText },
       { href: "/admin/inbox", label: "Inbox", icon: Mail, badge: 3, variant: "notification" },

@@ -1,0 +1,107 @@
+import Task from "../Models/Task.js";
+import TaskSubmission from "../Models/TaskSubmission.js";
+import User from "../Models/User.js";
+import Counter from "../Models/Counter.js";
+
+// Create a new task and assign to employee
+export const createTask = async (req, res) => {
+    try {
+        const { title, description, assignedTo, deadline } = req.body;
+
+        // Generate taskId
+        const counter = await Counter.findOneAndUpdate(
+            { id: "taskId" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        const taskId = `TSK-${counter.seq}`;
+
+        const task = await Task.create({
+            title,
+            description,
+            status: "Pending",
+            assignedTo,
+            assignedBy: req.user._id,
+            taskId,
+            deadline
+        });
+
+        res.status(201).json({ success: true, data: task });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get all tasks (for admin dashboard)
+export const getAllTasks = async (req, res) => {
+    try {
+        const tasks = await Task.find({})
+            .populate("assignedTo", "name email employeeId")
+            .populate("assignedBy", "name")
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: tasks });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Update task (change status, deadline, etc.)
+export const updateTask = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const updates = req.body;
+
+        const task = await Task.findByIdAndUpdate(taskId, updates, { new: true });
+        res.status(200).json({ success: true, data: task });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Delete task
+export const deleteTask = async (req, res) => {
+    try {
+        await Task.findByIdAndDelete(req.params.taskId);
+        res.status(200).json({ success: true, message: "Task deleted" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get all submissions
+export const getAllSubmissions = async (req, res) => {
+    try {
+        const submissions = await TaskSubmission.find({})
+            .populate("task", "title taskId")
+            .populate("employee", "name email employeeId")
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: submissions });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get submissions for a specific task
+export const getTaskSubmissions = async (req, res) => {
+    try {
+        const submissions = await TaskSubmission.find({ task: req.params.taskId })
+            .populate("employee", "name email employeeId");
+        res.status(200).json({ success: true, data: submissions });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Approve submission and update task status
+export const approveSubmission = async (req, res) => {
+    try {
+        const submission = await TaskSubmission.findById(req.params.submissionId);
+        
+        // Update task status to Completed
+        await Task.findByIdAndUpdate(submission.task, { status: "Completed" });
+        
+        res.status(200).json({ success: true, message: "Submission approved and task completed" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

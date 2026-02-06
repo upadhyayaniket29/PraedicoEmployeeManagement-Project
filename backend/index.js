@@ -6,6 +6,7 @@ import authRoutes from "./Routes/AuthRoutes.js";
 import adminRoutes from "./Routes/AdminRoutes.js";
 import userRoutes from "./Routes/UserRoutes.js";
 import taskRoutes from "./Routes/TaskRoutes.js";
+import adminTaskRoutes from "./Routes/AdminTaskRoutes.js";
 
 
 import path from "path";
@@ -29,6 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/admin", adminTaskRoutes);
 
 
 const PORT = process.env.PORT || 5000;
