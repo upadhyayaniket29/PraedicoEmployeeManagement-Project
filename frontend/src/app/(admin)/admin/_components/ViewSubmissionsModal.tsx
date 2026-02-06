@@ -32,7 +32,7 @@ export default function ViewSubmissionsModal({
 }: ViewSubmissionsModalProps) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(false);
-  const [approving, setApproving] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function ViewSubmissionsModal({
   };
 
   const handleApprove = async (submissionId: string) => {
-    setApproving(submissionId);
+    setProcessing(submissionId);
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/submissions/${submissionId}/approve`,
@@ -76,17 +76,39 @@ export default function ViewSubmissionsModal({
         }
       );
       if (response.data.success) {
-        // Optionally update UI to show approved or close modal?
-        // Maybe just show a success toast or reload?
-        // For now, let's just alert nicely or update local state if needed.
-        // But since approval completes the task usage, maybe we just leave it.
         alert("Submission approved and task marked as completed.");
         onClose();
       }
     } catch (err: any) {
         alert(err.response?.data?.message || "Failed to approve");
     } finally {
-      setApproving(null);
+      setProcessing(null);
+    }
+  };
+
+  const handleReject = async (submissionId: string) => {
+    if (!window.confirm("Are you sure you want to reject this submission? The task will be marked as Rejected.")) {
+        return;
+    }
+    setProcessing(submissionId);
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/submissions/${submissionId}/reject`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        alert("Submission rejected. Employee can resubmit or view status.");
+        onClose();
+      }
+    } catch (err: any) {
+        alert(err.response?.data?.message || "Failed to reject");
+    } finally {
+        setProcessing(null);
     }
   };
 
@@ -158,20 +180,32 @@ export default function ViewSubmissionsModal({
                                 )}
                             </div>
                             
-                            <div className="flex items-start">
-                                <button 
-                                    onClick={() => handleApprove(sub._id)}
-                                    disabled={approving === sub._id}
-                                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
-                                >
-                                    {approving === sub._id ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Check className="h-4 w-4" />
-                                    )}
-                                    Approve & Complete
-                                </button>
-                            </div>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => handleReject(sub._id)}
+                                        disabled={processing === sub._id}
+                                        className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+                                    >
+                                        {processing === sub._id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <X className="h-4 w-4" />
+                                        )}
+                                        Reject
+                                    </button>
+                                    <button 
+                                        onClick={() => handleApprove(sub._id)}
+                                        disabled={processing === sub._id}
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                                    >
+                                        {processing === sub._id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Check className="h-4 w-4" />
+                                        )}
+                                        Approve
+                                    </button>
+                                </div>
                         </div>
                     </div>
                 ))}

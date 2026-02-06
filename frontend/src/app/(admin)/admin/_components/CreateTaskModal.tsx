@@ -27,6 +27,7 @@ export default function CreateTaskModal({
     assignedTo: "",
     deadline: "",
   });
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
@@ -66,18 +67,34 @@ export default function CreateTaskModal({
     setError("");
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAttachment(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
+      const data = new FormData();
+      data.append("title", formData.title);
+      data.append("description", formData.description);
+      data.append("assignedTo", formData.assignedTo);
+      data.append("deadline", formData.deadline);
+      if (attachment) {
+        data.append("attachment", attachment);
+      }
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/tasks/create`,
-        formData,
+        data,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -103,6 +120,7 @@ export default function CreateTaskModal({
       assignedTo: "",
       deadline: "",
     });
+    setAttachment(null);
     onSuccess();
     onClose();
   };
@@ -184,6 +202,26 @@ export default function CreateTaskModal({
                       className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none"
                     />
                   </div>
+                </div>
+
+                {/* Attachment - NOW FILE UPLOAD */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Attachment (File)</label>
+                  <div className="relative">
+                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                    <input
+                      type="file"
+                      name="attachment"
+                      onChange={handleFileChange}
+                      className="w-full pl-12 pr-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition-all cursor-pointer"
+                    />
+                  </div>
+                  {attachment && (
+                      <p className="text-xs text-emerald-400 ml-1 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Selected: {attachment.name}
+                      </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

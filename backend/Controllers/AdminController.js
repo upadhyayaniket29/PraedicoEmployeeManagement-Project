@@ -142,7 +142,16 @@ export const registerEmployee = async (req, res) => {
  */
 export const getAllEmployees = async (req, res) => {
   try {
-    const employees = await User.find({ role: "EMPLOYEE" }).select("-password");
+    let query = { role: "EMPLOYEE" };
+
+    // If user is a Manager (EMPLOYEE role but authorized as manager),
+    // only show employees who report to them.
+    if (req.user.role === "EMPLOYEE") {
+        query.reportingManager = req.user.name;
+    }
+    // If Admin, query remains role: "EMPLOYEE" (shows all)
+
+    const employees = await User.find(query).select("-password");
     res.status(200).json({
       success: true,
       data: employees,
@@ -316,7 +325,8 @@ export const getAllManagers = async (req, res) => {
       "Project Manager", 
       "Product Manager", 
       "Team Lead",
-      "Engineering Manager"
+      "Engineering Manager",
+      "Senior Developer"
     ];
 
     const managers = await User.find({ 

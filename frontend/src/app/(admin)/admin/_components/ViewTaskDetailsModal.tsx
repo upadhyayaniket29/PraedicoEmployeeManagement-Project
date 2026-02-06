@@ -86,6 +86,23 @@ export default function ViewTaskDetailsModal({
                 </p>
              </div>
 
+             {/* Attachment */}
+             {task.attachment && (
+                <div className="bg-slate-800/30 rounded-2xl p-6 border border-slate-700/50">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4" /> Attachment
+                    </h3>
+                    <a 
+                        href={task.attachment} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-indigo-400 hover:text-indigo-300 underline font-medium"
+                    >
+                        View Attachment/Resource
+                    </a>
+                </div>
+             )}
+
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Assigned To */}
                 <div className="bg-slate-800/30 rounded-2xl p-6 border border-slate-700/50">

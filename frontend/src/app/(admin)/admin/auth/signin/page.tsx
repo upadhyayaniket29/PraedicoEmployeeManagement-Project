@@ -30,8 +30,17 @@ export default function AdminSignIn() {
 
       if (response.data.success) {
         // Check if user is an admin
-        if (response.data.data.role !== "ADMIN") {
-          setError("Access denied. Admin privileges required.");
+        // Check if user is an admin or a manager
+        const allowedRoles = ["ADMIN"];
+        const managerDesignations = [
+            "CEO", "CTO", "COO", "Director", "General Manager",
+            "Project Manager", "Product Manager", "Team Lead", "Engineering Manager", "Senior Developer"
+        ];
+        
+        const isManager = response.data.data.role === "EMPLOYEE" && managerDesignations.includes(response.data.data.designation);
+
+        if (!allowedRoles.includes(response.data.data.role) && !isManager) {
+          setError("Access denied. Admin or Manager privileges required.");
           setLoading(false);
           return;
         }

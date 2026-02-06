@@ -8,6 +8,15 @@ import { checkAndUpdateOverdueTasks } from "../Utils/checkOverdueTasks.js";
 export const createTask = async (req, res) => {
     try {
         const { title, description, assignedTo, deadline } = req.body;
+        
+        let attachmentUrl = "";
+        if (req.file) {
+            // Construct the full URL for the uploaded file
+            attachmentUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+        } else if (req.body.attachment) {
+            // Fallback to URL string if passed in body (from previous implementation)
+            attachmentUrl = req.body.attachment;
+        }
 
         // Generate taskId
         const counter = await Counter.findOneAndUpdate(
@@ -24,7 +33,8 @@ export const createTask = async (req, res) => {
             assignedTo,
             assignedBy: req.user._id,
             taskId,
-            deadline
+            deadline,
+            attachment: attachmentUrl
         });
 
         res.status(201).json({ success: true, data: task });
@@ -39,7 +49,13 @@ export const getAllTasks = async (req, res) => {
         // Check and update overdue tasks before fetching
         await checkAndUpdateOverdueTasks();
 
-        const tasks = await Task.find({})
+        let query = {};
+        // If Manager (Employee role), only show tasks they created/assigned
+        if (req.user.role === "EMPLOYEE") {
+            query.assignedBy = req.user._id;
+        }
+
+        const tasks = await Task.find(query)
             .populate("assignedTo", "name email employeeId")
             .populate("assignedBy", "name")
             .sort({ createdAt: -1 });
@@ -105,6 +121,21 @@ export const approveSubmission = async (req, res) => {
         await Task.findByIdAndUpdate(submission.task, { status: "Completed" });
 
         res.status(200).json({ success: true, message: "Submission approved and task completed" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Reject submission and update task status
+export const rejectSubmission = async (req, res) => {
+    try {
+        const submission = await TaskSubmission.findById(req.params.submissionId);
+
+        // Update task status to Rejected (or Pending to allow resubmission)
+        // User requested "Accept and Reject". "Rejected" is now an enum.
+        await Task.findByIdAndUpdate(submission.task, { status: "Rejected" });
+
+        res.status(200).json({ success: true, message: "Submission rejected" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
