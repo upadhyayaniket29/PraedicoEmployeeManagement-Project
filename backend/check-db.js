@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "./Models/User.js";
+import Task from "./Models/Task.js";
+import dns from 'dns';
+
+// Set DNS to use system DNS instead of localhost
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 dotenv.config();
 
@@ -10,32 +15,24 @@ const checkDb = async () => {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log("Connected to MongoDB");
 
+        const specificUser = await User.findOne({ email: "lti.05.aniket@gmail.com" });
+        if (specificUser) {
+            console.log(`FOUND_USER: ${specificUser.name} | Role: ${specificUser.role} | ID: ${specificUser._id} | Email: ${specificUser.email}`);
+        } else {
+            console.log("USER_NOT_FOUND for email: lti.05.aniket@gmail.com");
+        }
+
         const users = await User.find({});
         console.log(`Total Users in DB: ${users.length}`);
-
         users.forEach(u => {
-            console.log(`- ${u.name} (${u.role}): isActive=${u.isActive}, isVerified=${u.isVerified}`);
+            console.log(`User: ${u.name} | Role: ${u.role} | ID: ${u._id}`);
         });
 
-        const activeCount = await User.countDocuments({ isActive: { $ne: false }, isVerified: { $ne: false } });
-        console.log(`Active Users Count (ne false): ${activeCount}`);
-
-        const inactiveCount = await User.countDocuments({ isActive: { $ne: false }, isVerified: false });
-        console.log(`Inactive Users Count: ${inactiveCount}`);
-
-        const blockedCount = await User.countDocuments({ isActive: false });
-        console.log(`Blocked Users Count: ${blockedCount}`);
-
-        const registeredCount = await User.countDocuments({ role: { $in: ["USER", "EMPLOYEE"] } });
-        console.log(`Registered Users Count: ${registeredCount}`);
-
-        // Update all users to have default values if missing
-        console.log("Updating missing fields...");
-        const result = await User.updateMany(
-            { $or: [{ isActive: { $exists: false } }, { isVerified: { $exists: false } }] },
-            { $set: { isActive: true, isVerified: true } }
-        );
-        console.log(`Updated ${result.modifiedCount} users.`);
+        const tasks = await Task.find({});
+        console.log(`Total Tasks in DB: ${tasks.length}`);
+        tasks.forEach(t => {
+            console.log(`Task: ${t.title} | AssignedTo: ${t.assignedTo} | Status: ${t.status}`);
+        });
 
         await mongoose.disconnect();
         console.log("Disconnected from MongoDB");

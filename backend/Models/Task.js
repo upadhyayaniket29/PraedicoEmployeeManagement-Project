@@ -1,0 +1,19 @@
+import mongoose from "mongoose";
+
+const taskSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  status: {
+    type: String,
+    enum: ["Pending", "Work In Progress", "Completed", "Overdue"],
+    default: "Pending"
+  },
+  assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Employee ID
+  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Admin ID
+  taskId: { type: String, required: true, unique: true },
+  deadline: { type: Date },
+  attachment: { type: String }, // URL or file path for task attachment
+  marks: { type: Number, default: 0 } // Marks/score for the task
+}, { timestamps: true });
+
+export default mongoose.model("Task", taskSchema);

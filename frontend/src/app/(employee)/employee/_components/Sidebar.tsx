@@ -69,6 +69,7 @@ const MENU_GROUPS: MenuGroup[] = [
     title: "Main",
     items: [
       { href: "/employee", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/employee/tasks", label: "Tasks", icon: BarChart3 },
       { href: "/employee/attendance", label: "Attendance", icon: UserCheck },
       { href: "/employee/leave", label: "Leave Requests", icon: Layers },
     ],
