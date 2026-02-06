@@ -13,6 +13,7 @@ interface Task {
     taskId: string;
     deadline?: string;
     createdAt: string;
+    submittedAt?: string;
 }
 
 export default function EmployeeTasksPage() {
@@ -91,7 +92,10 @@ export default function EmployeeTasksPage() {
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${task.status === "Pending" ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" :
                                                     task.status === "Work In Progress" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                                                        "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                                        task.status === "Submitted" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                                            task.status === "Completed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                                                task.status === "Overdue" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
+                                                                    "bg-slate-500/10 text-slate-400 border border-slate-500/20"
                                                 }`}>
                                                 {task.status}
                                             </span>
@@ -108,16 +112,49 @@ export default function EmployeeTasksPage() {
                                                     <span>Deadline: {new Date(task.deadline).toLocaleDateString()}</span>
                                                 </div>
                                             )}
+                                            {task.submittedAt && (
+                                                <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                                                    <CheckCircle2 size={16} />
+                                                    <span>Submitted: {new Date(task.submittedAt).toLocaleDateString()}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex flex-col justify-end">
-                                        <button
-                                            onClick={() => handleOpenModal(task)}
-                                            className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex items-center gap-2 shadow-lg shadow-blue-900/20"
-                                        >
-                                            <Send size={18} />
-                                            Submit Task
-                                        </button>
+                                        {task.status === "Submitted" ? (
+                                            <button
+                                                onClick={() => handleOpenModal(task)}
+                                                className="px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
+                                            >
+                                                <FileText size={18} />
+                                                Edit Submission
+                                            </button>
+                                        ) : task.status === "Completed" || task.status === "Overdue" ? (
+                                            <button
+                                                disabled
+                                                className="px-6 py-3 bg-slate-700 text-slate-500 font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                                            >
+                                                {task.status === "Completed" ? (
+                                                    <>
+                                                        <CheckCircle2 size={18} />
+                                                        Completed
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <AlertCircle size={18} />
+                                                        Overdue
+                                                    </>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleOpenModal(task)}
+                                                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
+                                            >
+                                                <Send size={18} />
+                                                Submit Task
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -2,6 +2,7 @@ import Task from "../Models/Task.js";
 import TaskSubmission from "../Models/TaskSubmission.js";
 import User from "../Models/User.js";
 import Counter from "../Models/Counter.js";
+import { checkAndUpdateOverdueTasks } from "../Utils/checkOverdueTasks.js";
 
 // Create a new task and assign to employee
 export const createTask = async (req, res) => {
@@ -35,6 +36,9 @@ export const createTask = async (req, res) => {
 // Get all tasks (for admin dashboard)
 export const getAllTasks = async (req, res) => {
     try {
+        // Check and update overdue tasks before fetching
+        await checkAndUpdateOverdueTasks();
+
         const tasks = await Task.find({})
             .populate("assignedTo", "name email employeeId")
             .populate("assignedBy", "name")
@@ -96,10 +100,10 @@ export const getTaskSubmissions = async (req, res) => {
 export const approveSubmission = async (req, res) => {
     try {
         const submission = await TaskSubmission.findById(req.params.submissionId);
-        
+
         // Update task status to Completed
         await Task.findByIdAndUpdate(submission.task, { status: "Completed" });
-        
+
         res.status(200).json({ success: true, message: "Submission approved and task completed" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
