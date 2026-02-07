@@ -49,7 +49,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
 
     const fetchExistingSubmission = async () => {
         try {
-            const token = localStorage.getItem("employeeToken");
+            const token = localStorage.getItem("admin_token");
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/tasks/submissions/${task._id}`,
                 {
@@ -98,13 +98,12 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
         setError("");
 
         try {
-            const token = localStorage.getItem("employeeToken");
+            const token = localStorage.getItem("admin_token");
             let attachmentValue = "";
 
             // If file is selected, convert to base64 or upload to server
             if (attachmentType === "file" && attachmentFile) {
                 // For now, we'll store the file name and indicate it's a file
-                // In production, you'd upload to cloud storage (S3, Cloudinary, etc.)
                 attachmentValue = `[FILE] ${attachmentFile.name}`;
             } else if (attachmentType === "link") {
                 attachmentValue = attachmentLink;
@@ -183,7 +182,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                             <h2 className="text-2xl font-bold text-white">
                                 {isEditMode ? "Edit Task Submission" : "Submit Task Report"}
                             </h2>
-                            <p className="text-slate-400 text-sm mt-1">Task: <span className="text-blue-400 font-medium">{task.title}</span></p>
+                            <p className="text-slate-400 text-sm mt-1">Task: <span className="text-indigo-400 font-medium">{task.title}</span></p>
                         </div>
                         <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 transition-colors">
                             <X size={24} />
@@ -216,7 +215,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                     required
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                                     placeholder="Brief title for your submission"
                                 />
                             </div>
@@ -228,7 +227,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={5}
-                                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all resize-none"
+                                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none"
                                     placeholder="Describe your progress and findings..."
                                 />
                             </div>
@@ -242,7 +241,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                         type="button"
                                         onClick={() => setAttachmentType("link")}
                                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${attachmentType === "link"
-                                            ? "bg-blue-600 text-white shadow-lg"
+                                            ? "bg-indigo-600 text-white shadow-lg"
                                             : "text-slate-400 hover:text-white"
                                             }`}
                                     >
@@ -253,7 +252,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                         type="button"
                                         onClick={() => setAttachmentType("file")}
                                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${attachmentType === "file"
-                                            ? "bg-blue-600 text-white shadow-lg"
+                                            ? "bg-indigo-600 text-white shadow-lg"
                                             : "text-slate-400 hover:text-white"
                                             }`}
                                     >
@@ -270,7 +269,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                             type="url"
                                             value={attachmentLink}
                                             onChange={(e) => setAttachmentLink(e.target.value)}
-                                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                                             placeholder="https://drive.google.com/file/..."
                                         />
                                     </div>
@@ -287,8 +286,8 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                                     accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
                                                     className="hidden"
                                                 />
-                                                <div className="flex items-center gap-3 p-4 bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-xl hover:border-blue-500/50 transition-all">
-                                                    <Upload className="text-slate-500 group-hover:text-blue-500" size={24} />
+                                                <div className="flex items-center gap-3 p-4 bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-500/50 transition-all">
+                                                    <Upload className="text-slate-500 group-hover:text-indigo-500" size={24} />
                                                     <div className="flex-1">
                                                         <p className="text-white font-medium">
                                                             {attachmentFile ? attachmentFile.name : "Click to upload file"}
@@ -298,16 +297,16 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                                         </p>
                                                     </div>
                                                     {attachmentFile && (
-                                                        <FileText className="text-blue-500" size={24} />
+                                                        <FileText className="text-indigo-500" size={24} />
                                                     )}
                                                 </div>
                                             </div>
                                         </label>
                                         {attachmentFile && (
-                                            <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                            <div className="flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
                                                 <div className="flex items-center gap-2">
-                                                    <FileText className="text-blue-400" size={16} />
-                                                    <span className="text-sm text-blue-400 font-medium">{attachmentFile.name}</span>
+                                                    <FileText className="text-indigo-400" size={16} />
+                                                    <span className="text-sm text-indigo-400 font-medium">{attachmentFile.name}</span>
                                                     <span className="text-xs text-slate-500">
                                                         ({(attachmentFile.size / 1024 / 1024).toFixed(2)} MB)
                                                     </span>
@@ -336,7 +335,7 @@ export default function SubmitTaskModal({ isOpen, onClose, task, onSuccess }: Su
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-[2] px-6 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-[2] px-6 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
                                         <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

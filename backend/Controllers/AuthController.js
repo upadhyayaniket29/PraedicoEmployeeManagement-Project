@@ -97,6 +97,14 @@ export const login = async (req, res) => {
       });
     }
 
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been deactivated. Please contact the administrator.",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -106,6 +114,7 @@ export const login = async (req, res) => {
         email: user.email,
         role: user.role,
         designation: user.designation,
+        isSeniorEmployee: user.isSeniorEmployee,
         token: generateToken(user._id),
       },
     });
@@ -125,7 +134,7 @@ export const login = async (req, res) => {
  */
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id).select("-password").populate("reportingManager", "name");
     if (!user) {
       return res.status(404).json({
         success: false,

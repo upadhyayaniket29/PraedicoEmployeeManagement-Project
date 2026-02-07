@@ -433,7 +433,7 @@ export default function EmployeesPage() {
                     <td className="py-6 px-6 min-w-[200px]">
                       <div className="flex items-center gap-2 text-slate-300 font-medium text-xs">
                         <UserCheck className="h-3.5 w-3.5 text-indigo-500/50" />
-                        {employee.reportingManager || "Owner"}
+                        {(employee.reportingManager as any)?.name || "Owner"}
                       </div>
                     </td>
                     <td className="py-6 px-6 text-right">

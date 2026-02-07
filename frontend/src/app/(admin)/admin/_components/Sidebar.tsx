@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, memo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -24,6 +24,7 @@ import {
   UserCheck,
   CreditCard,
   CheckSquare,
+  ListTodo,
 } from "lucide-react";
 import axios from "axios";
 import { cn } from "@/lib/utils";
@@ -63,65 +64,66 @@ interface SidebarProps {
 // MENU CONFIGURATION
 // ==========================================
 
-const MENU_GROUPS: MenuGroup[] = [
-  {
-    title: "Overview",
-    items: [
-      { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/admin/analytics", label: "Analytics", icon: BarChart3, badge: "New", variant: "new" },
+const getMenuGroups = (role: string, isSeniorEmployee: boolean): MenuGroup[] => {
+  const isAdmin = role === "ADMIN";
+  const canManage = isAdmin || isSeniorEmployee;
+
+  // Junior Employees (Role: EMPLOYEE, isSenior: false) only see Tasks and Dashboard
+  if (!canManage) {
+    return [
       {
-        label: "eCommerce",
-        icon: ShoppingBag,
-        subItems: [
-          { href: "/admin/ecommerce/products", label: "Products" },
-          { href: "/admin/ecommerce/orders", label: "Orders" },
-          { href: "/admin/ecommerce/customers", label: "Customers" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Workspace",
-    items: [
-      { href: "/admin/employees", label: "Employees", icon: Users },
-      { href: "/admin/tasks", label: "Task Management", icon: CheckSquare },
-      { label: "User Management", icon: UserCheck },
-      { href: "/admin/reports", label: "System Reports", icon: FileText },
-      { href: "/admin/inbox", label: "Inbox", icon: Mail, badge: 3, variant: "notification" },
-    ],
-  },
-  {
-    title: "Interface",
-    items: [
-      {
-        label: "Components",
-        icon: Layers,
-        subItems: [
-          { href: "/admin/ui/alerts", label: "Alerts" },
-          { href: "/admin/ui/buttons", label: "Buttons" },
-          { href: "/admin/ui/cards", label: "Cards" },
+        title: "Overview",
+        items: [
+          { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
         ],
       },
       {
-        label: "Design System",
-        icon: Palette,
-        subItems: [
-          { href: "/admin/ui/icons", label: "Icons" },
-          { href: "/admin/ui/typography", label: "Typography" },
+        title: "Workspace",
+        items: [
+          { href: "/admin/myTask", label: "My Tasks", icon: ListTodo },
+          { href: "/admin/inbox", label: "Inbox", icon: Mail },
         ],
       },
-    ],
-  },
-  {
-    title: "Settings",
-    items: [
-      { href: "/admin/profile", label: "Profile", icon: User },
-      { href: "/admin/billing", label: "Billing", icon: CreditCard },
-      { href: "/admin/settings", label: "Settings", icon: Settings },
-      { href: "/admin/help", label: "Help Center", icon: HelpCircle },
-    ],
-  },
-];
+      {
+        title: "Account",
+        items: [
+          { href: "/admin/profile", label: "Profile", icon: User },
+        ],
+      },
+    ];
+  }
+
+  // Managers and Admins see the full workspace
+  return [
+    {
+      title: "Overview",
+      items: [
+        { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+      ],
+    },
+    {
+      title: "Workspace",
+      items: [
+        ...(canManage ? [
+          { href: "/admin/employees", label: isAdmin ? "All Employees" : "My Team", icon: Users },
+          { href: "/admin/tasks", label: "Task Management", icon: CheckSquare },
+        ] : []),
+        ...(!isAdmin ? [{ href: "/admin/myTask", label: "My Tasks", icon: ListTodo }] : []),
+        ...(isAdmin ? [{ label: "User Management", icon: UserCheck }] : []),
+        { href: "/admin/reports", label: "System Reports", icon: FileText },
+        { href: "/admin/inbox", label: "Inbox", icon: Mail },
+      ],
+    },
+    {
+      title: "Settings",
+      items: [
+        { href: "/admin/profile", label: "Profile", icon: User },
+        { href: "/admin/settings", label: "Settings", icon: Settings },
+      ],
+    },
+  ];
+};
 
 // ==========================================
 // MAIN SIDEBAR COMPONENT
@@ -137,8 +139,13 @@ export function Sidebar({
   const [userData, setUserData] = useState({
     name: "Loading...",
     email: "...",
-    avatar: "/avatars/admin-face.png"
+    avatar: "/avatars/admin-face.png",
+    role: "EMPLOYEE",
+    designation: "Software Engineer",
+    isSeniorEmployee: false,
   });
+
+  const menuGroups = React.useMemo(() => getMenuGroups(userData.role, userData.isSeniorEmployee), [userData.role, userData.isSeniorEmployee]);
 
   useEffect(() => {
     setIsClient(true);
@@ -153,15 +160,25 @@ export function Sidebar({
           Authorization: `Bearer ${token}`
         }
       });
-      if (data.success && data.user) {
+      if (data.success && data.data) {
         setUserData({
-          name: data.user.name,
-          email: data.user.email,
-          avatar: data.user.avatar || "/avatars/admin-face.png",
+          name: data.data.name,
+          email: data.data.email,
+          avatar: data.data.avatar || "/avatars/admin-face.png",
+          role: data.data.role || "EMPLOYEE",
+          designation: data.data.designation || data.data.role || "Software Engineer",
+          isSeniorEmployee: data.data.isSeniorEmployee || false,
         });
       }
     } catch (e) {
-      setUserData({ name: "Arjun Singh", email: "admin@praedico.com", avatar: "/avatars/admin-face.png" });
+      setUserData({ 
+        name: "Arjun Singh", 
+        email: "admin@praedico.com", 
+        avatar: "/avatars/admin-face.png", 
+        role: "ADMIN", 
+        designation: "Administrator",
+        isSeniorEmployee: true 
+      });
     }
   };
 
@@ -214,7 +231,7 @@ export function Sidebar({
 
         {/* 2. Navigation */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden sidebar-scroll py-6 space-y-8">
-          {MENU_GROUPS.map((group) => (
+          {menuGroups.map((group) => (
             <NavGroup
               key={group.title}
               group={group}
@@ -472,12 +489,14 @@ PromoCard.displayName = "PromoCard";
 
 const UserProfileFooter = memo(({ isOpen, user }: { isOpen: boolean; user: any }) => {
   const [imgError, setImgError] = useState(false);
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
       // For now just clear local storage if no specialized logout route exists
       localStorage.removeItem("admin_token");
-      window.location.href = "/admin/auth/signIn";
+      localStorage.removeItem("admin_user");
+      router.push("/");
     } catch (e) { console.error(e); }
   };
 
@@ -519,7 +538,7 @@ const UserProfileFooter = memo(({ isOpen, user }: { isOpen: boolean; user: any }
           <p className="text-sm font-bold text-white truncate leading-tight group-hover:text-pink-300 transition-colors">
             {user.name}
           </p>
-          <p className="text-[10px] text-slate-500 truncate font-medium uppercase tracking-wide mt-0.5">Administrator</p>
+          <p className="text-[10px] text-slate-500 truncate font-medium uppercase tracking-wide mt-0.5">{user.designation}</p>
         </div>
 
         {/* Logout */}

@@ -1,292 +1,175 @@
-
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, ShieldCheck, AlertCircle, X, CheckCircle } from "lucide-react";
+import { Lock, Mail, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import axios from "axios";
+import { Button } from "@/app/(admin)/admin/shared-components/ui/button";
+import { Input } from "@/app/(admin)/admin/shared-components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/app/(admin)/admin/shared-components/ui/card";
+import { Label } from "@/app/(admin)/admin/shared-components/ui/label";
 
-export default function EmployeeLoginPage() {
-    const router = useRouter();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [showForgotPassword, setShowForgotPassword] = useState(false);
-    const [resetEmail, setResetEmail] = useState("");
-    const [resetSuccess, setResetSuccess] = useState(false);
+export default function RootPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setIsLoading(true);
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            });
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/login`, {
+        email,
+        password,
+      });
 
-            const data = await response.json();
+      if (response.data.success) {
+        const userData = response.data.data;
+        
+        // Redirection Logic
+        const managerDesignations = [
+            "CEO", "CTO", "COO", "Director", "General Manager",
+            "Project Manager", "Product Manager", "Team Lead", "Engineering Manager", "Senior Developer"
+        ];
+        
+        const isManager = userData.role === "ADMIN" || 
+                         (userData.role === "EMPLOYEE" && (managerDesignations.includes(userData.designation) || userData.isSeniorEmployee));
 
-            if (data.success && data.data.role === "EMPLOYEE") {
-                // Store authentication token
-                localStorage.setItem("employeeToken", data.data.token);
-                localStorage.setItem("employeeAuth", "true");
-                localStorage.setItem("employeeEmail", email);
-                localStorage.setItem("employeeName", data.data.name);
-                localStorage.setItem("employeeId", data.data.id);
-
-                // Redirect to employee dashboard
-                window.location.href = "/employee";
-            } else if (data.success && data.data.role === "ADMIN") {
-                setError("This is the employee portal. Please use the admin portal to login.");
-                setIsLoading(false);
-            } else {
-                setError(data.message || "Invalid credentials. Please check your email and password.");
-                setIsLoading(false);
-            }
-        } catch (err) {
-            console.error("Login error:", err);
-            setError("An error occurred. Please try again.");
-            setIsLoading(false);
+        if (isManager || userData.role === "EMPLOYEE") {
+          // All authorized users go to the Admin routing structure
+          localStorage.setItem("admin_token", userData.token);
+          localStorage.setItem("admin_user", JSON.stringify(userData));
+          // Standardized keys for components that might expect them
+          localStorage.setItem("employeeToken", userData.token);
+          localStorage.setItem("employeeId", userData.id);
+          
+          router.push("/admin/dashboard");
+        } else {
+          setError("Access denied. Authorized account required.");
+          setLoading(false);
         }
-    };
+      }
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        setError(err.response.data.message);
+      } else {
+        setError(err.response?.data?.message || "Invalid credentials. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleForgotPassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
+  return (
+    <div className="min-h-screen w-full bg-[#0f172a] flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse delay-700"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] opacity-10"></div>
 
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/forgot-password`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email: resetEmail }),
-            });
+      <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center p-3 mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-xl shadow-indigo-500/20 ring-1 ring-white/20">
+            <ShieldCheck className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-extrabold text-white tracking-tight leading-none">
+            Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Portal</span>
+          </h1>
+          <p className="text-slate-400 mt-3 font-medium">Secure access to management dashboard</p>
+        </div>
 
-            const data = await response.json();
-
-            if (data.success) {
-                setResetSuccess(true);
-            } else {
-                setError(data.message || "Failed to send reset link.");
-                setShowForgotPassword(false);
-            }
-        } catch (err) {
-            console.error("Forgot password error:", err);
-            setError("An error occurred. Please try again.");
-            setShowForgotPassword(false);
-        }
-    };
-
-
-    return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none"></div>
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-
-            <div className="w-full max-w-md relative z-10">
-                {/* Logo & Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center mb-4">
-                        <div className="relative">
-                            <div className="absolute -inset-3 bg-indigo-500/20 rounded-full blur-xl"></div>
-                            <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.3)] ring-1 ring-white/10">
-                                <ShieldCheck className="text-white h-8 w-8 drop-shadow-md" />
-                            </div>
-                        </div>
-                    </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Employee Portal</h1>
-                    <p className="text-slate-400">Sign in to access your dashboard</p>
+        <Card className="bg-[#1e293b]/40 backdrop-blur-2xl border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[2.5rem] overflow-hidden group hover:border-slate-700/50 transition-all duration-500">
+          <CardHeader className="space-y-1 pb-6 pt-8 text-center px-8">
+            <CardTitle className="text-2xl font-bold text-white tracking-tight">Welcome Back</CardTitle>
+            <CardDescription className="text-slate-400 text-sm font-medium">
+              Please enter your credentials to verify your identity
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-8 pb-8">
+            <form onSubmit={handleSignIn} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300 ml-1 text-sm font-semibold">Email Address</Label>
+                <div className="relative group/input">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-indigo-400 transition-colors">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="pl-12 h-14 bg-slate-900/60 border-slate-700/50 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 rounded-2xl transition-all duration-300"
+                  />
                 </div>
-
-                {/* Login Card */}
-                <div className="rounded-[2rem] bg-[#0f172a] p-8 border border-slate-800 shadow-2xl">
-                    <form className="space-y-6" onSubmit={handleLogin}>
-                        {/* Error Message */}
-                        {error && (
-                            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-                                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-red-400">{error}</p>
-                            </div>
-                        )}
-
-                        {/* Email Field */}
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium text-slate-300">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-slate-500" />
-                                </div>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="block w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                                    placeholder="admin@praedico.com"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Password Field */}
-                        <div className="space-y-2">
-                            <label htmlFor="password" className="block text-sm font-medium text-slate-300">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-slate-500" />
-                                </div>
-                                <input
-                                    id="password"
-                                    type={showPassword ? "text" : "password"}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    className="block w-full pl-11 pr-12 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                                    placeholder="Enter your password"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5" />
-                                    ) : (
-                                        <Eye className="h-5 w-5" />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Remember Me & Forgot Password */}
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-0"
-                                />
-                                <span className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">
-                                    Remember me
-                                </span>
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setShowForgotPassword(true)}
-                                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                                Forgot password?
-                            </button>
-                        </div>
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-bold shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                        >
-                            {isLoading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                    </svg>
-                                    Signing in...
-                                </span>
-                            ) : (
-                                "Sign In"
-                            )}
-                        </button>
-                    </form>
-
-
+              </div>
+              <div className="space-y-2">
+                <div className="relative group/input">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-indigo-400 transition-colors">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="pl-12 h-14 bg-slate-900/60 border-slate-700/50 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 rounded-2xl transition-all duration-300"
+                  />
                 </div>
+              </div>
 
-                {/* Footer */}
-                <p className="text-center text-slate-500 text-sm mt-6">
-                    © 2026 Praedico. All rights reserved.
-                </p>
+              {error && (
+                <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium animate-in slide-in-from-top-2 duration-300">
+                  <p className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-lg shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70"
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                ) : (
+                  <>
+                    Sign In to Portal <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-6 border-t border-slate-800/30 pt-8 pb-10 px-8">
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-800/60"></span>
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-slate-500">
+                <span className="bg-[#1e293b]/10 backdrop-blur-md px-4 py-1 rounded-full border border-slate-800/60">Security Protocols Active</span>
+              </div>
             </div>
 
-            {/* Forgot Password Modal */}
-            {showForgotPassword && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="w-full max-w-md rounded-[2rem] bg-[#0f172a] p-8 border border-slate-800 shadow-2xl relative animate-in zoom-in duration-200">
-                        {/* Close Button */}
-                        <button
-                            onClick={() => {
-                                setShowForgotPassword(false);
-                                setResetSuccess(false);
-                                setResetEmail("");
-                            }}
-                            className="absolute top-6 right-6 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                        >
-                            <X size={20} />
-                        </button>
+            <p className="text-center text-slate-500 text-xs">
+              This is a restricted area. All access is logged and monitored.
+              <br />
+              Authorized personnel only.
+            </p>
+          </CardFooter>
+        </Card>
 
-                        {!resetSuccess ? (
-                            <>
-                                <h2 className="text-2xl font-bold text-white mb-2">Reset Password</h2>
-                                <p className="text-slate-400 text-sm mb-6">
-                                    Enter your email address and we'll send you a link to reset your password.
-                                </p>
-
-                                <form onSubmit={handleForgotPassword} className="space-y-6">
-                                    <div className="space-y-2">
-                                        <label htmlFor="reset-email" className="block text-sm font-medium text-slate-300">
-                                            Email Address
-                                        </label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <Mail className="h-5 w-5 text-slate-500" />
-                                            </div>
-                                            <input
-                                                id="reset-email"
-                                                type="email"
-                                                value={resetEmail}
-                                                onChange={(e) => setResetEmail(e.target.value)}
-                                                required
-                                                className="block w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                                                placeholder="admin@praedico.com"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-bold shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] hover:scale-[1.02] transition-all duration-300"
-                                    >
-                                        Send Reset Link
-                                    </button>
-                                </form>
-                            </>
-                        ) : (
-                            <div className="text-center py-8">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4">
-                                    <CheckCircle className="h-8 w-8 text-emerald-400" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Check Your Email</h3>
-                                <p className="text-slate-400 text-sm">
-                                    We've sent a password reset link to <span className="text-white font-medium">{resetEmail}</span>
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+        <p className="text-center mt-8 text-slate-500 text-sm font-medium">
+          &copy; 2026 <span className="text-slate-400">Praedico</span> Enterprise Security
+        </p>
+      </div>
+    </div>
+  );
 }
-

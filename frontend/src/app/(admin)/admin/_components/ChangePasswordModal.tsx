@@ -39,7 +39,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         setLoading(true);
 
         try {
-            const token = localStorage.getItem("employeeToken");
+            // Using admin_token for admin side
+            const token = localStorage.getItem("admin_token");
             const response = await axios.post(
                 `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/change-password`,
                 {
@@ -83,7 +84,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 </button>
 
                 <div className="flex flex-col items-center mb-8">
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4">
+                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-4">
                         <Lock className="h-8 w-8 text-white" />
                     </div>
                     <h2 className="text-2xl font-bold text-white tracking-tight">Change Password</h2>
@@ -112,8 +113,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                             required
                             value={formData.currentPassword}
                             onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                            placeholder="••••••••"
+                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                            placeholder="Current password"
                         />
                     </div>
 
@@ -124,8 +125,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                             required
                             value={formData.newPassword}
                             onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                            placeholder="••••••••"
+                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                            placeholder="At least 6 characters"
                         />
                     </div>
 
@@ -136,21 +137,21 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                             required
                             value={formData.confirmPassword}
                             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                            placeholder="••••••••"
+                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                            placeholder="Repeat new password"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 group"
+                        className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 group disabled:opacity-50"
                     >
                         {loading ? (
                             <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
                             <>
-                                Confirm Update
+                                Update Password
                             </>
                         )}
                     </button>

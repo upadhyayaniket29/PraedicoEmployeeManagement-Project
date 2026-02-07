@@ -20,14 +20,20 @@ export const registerEmployee = async (req, res) => {
       employeeType, 
       temporaryType, 
       phoneNumber, 
-      reportingManager: passedReportingManager 
+      reportingManager: passedReportingManager,
+      isSeniorEmployee 
     } = req.body;
 
     // If the creator is an Admin, they can assign any reporting manager.
     // If the creator is a Manager (EMPLOYEE role), they MUST be the reporting manager.
     let reportingManager = passedReportingManager;
     if (req.user.role === "EMPLOYEE") {
-        reportingManager = req.user.name;
+        reportingManager = req.user._id;
+    }
+
+    // Fix for ObjectId casting: if reportingManager is an empty string, set it to null
+    if (reportingManager === "") {
+        reportingManager = null;
     }
 
     if (!name || !email || !password) {
@@ -78,10 +84,15 @@ export const registerEmployee = async (req, res) => {
       phoneNumber,
       reportingManager,
       employeeId,
+      isSeniorEmployee: isSeniorEmployee || false,
     });
 
+    // Fetch reporting manager details for the email
+    const populatedEmployee = await User.findById(employee._id).populate("reportingManager", "name");
+    const managerName = populatedEmployee.reportingManager?.name || "Administration";
+
     // Send email with credentials
-    const message = `Welcome to the team, ${name}!\n\nYour account has been created by the Admin.\n\nEmployee ID: ${employeeId}\nEmail: ${email}\nPassword: ${password}\nDesignation: ${designation}\nDepartment: ${category}\nReporting Manager: ${reportingManager}\n\nPlease login and change your password.`;
+    const message = `Welcome to the team, ${name}!\n\nYour account has been created by the Admin.\n\nEmployee ID: ${employeeId}\nEmail: ${email}\nPassword: ${password}\nDesignation: ${designation}\nDepartment: ${category}\nReporting Manager: ${managerName}\n\nPlease login and change your password.`;
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
@@ -93,7 +104,7 @@ export const registerEmployee = async (req, res) => {
           <p><strong>Password:</strong> ${password}</p>
           <p><strong>Designation:</strong> ${designation}</p>
           <p><strong>Department:</strong> ${category}</p>
-          <p><strong>Reporting Manager:</strong> ${reportingManager}</p>
+          <p><strong>Reporting Manager:</strong> ${managerName}</p>
         </div>
         <p>Please login and change your password.</p>
       </div>
@@ -154,11 +165,11 @@ export const getAllEmployees = async (req, res) => {
     // If user is a Manager (EMPLOYEE role but authorized as manager),
     // only show employees who report to them.
     if (req.user.role === "EMPLOYEE") {
-        query.reportingManager = req.user.name;
+        query.reportingManager = req.user._id;
     }
     // If Admin, query remains role: "EMPLOYEE" (shows all)
 
-    const employees = await User.find(query).select("-password");
+    const employees = await User.find(query).select("-password").populate("reportingManager", "name");
     res.status(200).json({
       success: true,
       data: employees,
@@ -190,6 +201,17 @@ export const toggleEmployeeStatus = async (req, res) => {
 
     employee.isActive = !employee.isActive;
     await employee.save();
+
+    // If deactivated, reassign their subordinates to system admin
+    if (!employee.isActive) {
+        const systemAdmin = await User.findOne({ email: "krishnam@gmail.com" });
+        if (systemAdmin) {
+            await User.updateMany(
+                { reportingManager: employee._id },
+                { $set: { reportingManager: systemAdmin._id } }
+            );
+        }
+    }
 
     const statusText = employee.isActive ? "Activated" : "Deactivated";
     
@@ -256,7 +278,8 @@ export const updateEmployee = async (req, res) => {
       employeeType, 
       temporaryType, 
       phoneNumber, 
-      reportingManager 
+      reportingManager,
+      isSeniorEmployee 
     } = req.body;
 
     const employee = await User.findById(req.params.id);
@@ -287,7 +310,11 @@ export const updateEmployee = async (req, res) => {
     if (employeeType) employee.employeeType = employeeType;
     if (temporaryType !== undefined) employee.temporaryType = temporaryType;
     if (phoneNumber !== undefined) employee.phoneNumber = phoneNumber;
-    if (reportingManager !== undefined) employee.reportingManager = reportingManager;
+    if (reportingManager !== undefined) {
+        // Fix for ObjectId casting: if reportingManager is an empty string, set it to null
+        employee.reportingManager = reportingManager === "" ? null : reportingManager;
+    }
+    if (isSeniorEmployee !== undefined) employee.isSeniorEmployee = isSeniorEmployee;
 
     await employee.save();
 
@@ -305,6 +332,7 @@ export const updateEmployee = async (req, res) => {
         temporaryType: employee.temporaryType,
         phoneNumber: employee.phoneNumber,
         reportingManager: employee.reportingManager,
+        isSeniorEmployee: employee.isSeniorEmployee,
       },
     });
   } catch (error) {

@@ -30,6 +30,7 @@ export default function RegisterEmployeeModal({
     temporaryType: "",
     phoneNumber: "",
     reportingManager: "",
+    isSeniorEmployee: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,7 +74,7 @@ export default function RegisterEmployeeModal({
     if (userStr) {
         const user = JSON.parse(userStr);
         if (user.role === "EMPLOYEE") {
-            setFormData(prev => ({ ...prev, reportingManager: user.name }));
+            setFormData(prev => ({ ...prev, reportingManager: user.id || user._id }));
         }
     }
   }, [isOpen]);
@@ -143,6 +144,7 @@ export default function RegisterEmployeeModal({
       temporaryType: "",
       phoneNumber: "",
       reportingManager: "",
+      isSeniorEmployee: false,
     });
     setGeneratedPassword("");
     onSuccess();
@@ -368,11 +370,32 @@ export default function RegisterEmployeeModal({
                         <option value="" disabled className="bg-slate-900">No managers available</option>
                       )}
                       {managers.map((manager) => (
-                        <option key={manager._id} value={manager.name} className="bg-slate-900">
+                        <option key={manager._id} value={manager._id} className="bg-slate-900">
                           {manager.name} - {manager.employeeId}
                         </option>
                       ))}
                     </select>
+                  </div>
+                </div>
+
+                {/* Senior Employee Toggle */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Senior Status</label>
+                  <div 
+                    onClick={() => setFormData(prev => ({ ...prev, isSeniorEmployee: !prev.isSeniorEmployee }))}
+                    className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+                      formData.isSeniorEmployee 
+                        ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400' 
+                        : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <UserCheck className={`h-5 w-5 ${formData.isSeniorEmployee ? 'text-indigo-400' : 'text-slate-500'}`} />
+                      <span className="text-sm font-bold">Senior Employee</span>
+                    </div>
+                    <div className={`w-10 h-6 rounded-full relative transition-colors ${formData.isSeniorEmployee ? 'bg-indigo-600' : 'bg-slate-700'}`}>
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.isSeniorEmployee ? 'left-5' : 'left-1'}`} />
+                    </div>
                   </div>
                 </div>
               </div>

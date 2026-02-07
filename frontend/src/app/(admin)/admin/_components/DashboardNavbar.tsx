@@ -26,6 +26,7 @@ export default function DashboardNavbar() {
   // 1. Add State for Name
   const [adminName, setAdminName] = useState("Admin Account");
   const [adminEmail, setAdminEmail] = useState("Loading...");
+  const [adminRole, setAdminRole] = useState("Administrator");
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function DashboardNavbar() {
         if (data.success && data.data) {
           setAdminName(data.data.name || "Admin");
           setAdminEmail(data.data.email || "admin@praedico.com");
+          setAdminRole(data.data.designation || data.data.role || "Administrator");
         }
       } catch (e) {
         setAdminEmail("Guest Mode");
@@ -63,7 +65,7 @@ export default function DashboardNavbar() {
     try {
       localStorage.removeItem("admin_token");
       localStorage.removeItem("admin_user");
-      router.push("/admin/auth/signin");
+      router.push("/");
     } catch (e) { console.error(e); }
   };
 
@@ -146,7 +148,7 @@ export default function DashboardNavbar() {
                   {adminName}
                 </p>
                 <p className="text-[10px] text-slate-500 font-mono tracking-wider uppercase group-hover:text-slate-400">
-                  Administrator
+                  {adminRole}
                 </p>
               </div>
 

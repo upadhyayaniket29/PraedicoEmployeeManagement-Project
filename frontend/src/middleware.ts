@@ -2,11 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-    // Only protect /employee routes
-    if (request.nextUrl.pathname.startsWith('/employee')) {
-        // Check if user is authenticated by looking at cookies or headers
-        // For now, we'll let the client-side handle this
-        // This middleware is just a placeholder for future server-side auth
+    // Only protect /admin routes
+    if (request.nextUrl.pathname.startsWith('/admin')) {
         return NextResponse.next();
     }
 
@@ -14,5 +11,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/employee/:path*'],
+    matcher: ['/admin/:path*'],
 };
